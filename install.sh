@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Настройки
-REPO_URL="https://github.com/kate-caffe1ne/bast-techsupport-bot.git"
+REPO_URL="https://github.com/kate-caffe1ne/bast-techsupport-bot"
 INSTALL_DIR="/opt/bast-parser"
 DOCKER_IMAGE_NAME="bast-parser"
 DOCKER_CONTAINER_NAME="bast-parser-app"
@@ -13,10 +13,10 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
-# Требовать права суперпользователя для записи в /opt и /usr/local/bin
+# Требовать права суперпользователя
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}Пожалуйста, запустите установку с правами sudo:${NC}"
-  echo -e "sudo bash <(curl -fsSL https://raw.githubusercontent.com/kate-caffe1ne/bast-techsupport-bot/main/install.sh)"
+  echo -e "sudo bash <(curl -fsSL ${REPO_URL}/raw/main/install.sh)"
   exit 1
 fi
 
@@ -40,21 +40,21 @@ install_docker() {
     echo -e "${GREEN}Docker Compose успешно установлен!${NC}"
 }
 
-# Функция для установки Git
-install_git() {
-    echo -e "${YELLOW}Git не установлен. Начинаем автоматическую установку...${NC}"
+# Функция для установки unzip
+install_unzip() {
+    echo -e "${YELLOW}Unzip не установлен. Начинаем автоматическую установку...${NC}"
     if command -v apt-get &> /dev/null; then
         apt-get update
-        apt-get install -y git
+        apt-get install -y unzip
     elif command -v yum &> /dev/null; then
-        yum install -y git
+        yum install -y unzip
     elif command -v dnf &> /dev/null; then
-        dnf install -y git
+        dnf install -y unzip
     else
-        echo -e "${RED}Ошибка: Не удалось определить пакетный менеджер. Пожалуйста, установите Git вручную.${NC}"
+        echo -e "${RED}Ошибка: Не удалось определить пакетный менеджер. Пожалуйста, установите 'unzip' вручную.${NC}"
         exit 1
     fi
-    echo -e "${GREEN}Git успешно установлен!${NC}"
+    echo -e "${GREEN}Unzip успешно установлен!${NC}"
 }
 
 # --- Основной скрипт ---
@@ -71,25 +71,33 @@ if ! docker compose version &> /dev/null; then
     apt-get install -y docker-compose-plugin || apt-get install -y docker-compose
 fi
 
-# 2. Проверка и установка Git
-if ! command -v git &> /dev/null; then
-    install_git
+# 2. Проверка и установка unzip
+if ! command -v unzip &> /dev/null; then
+    install_unzip
 fi
 
-# 3. Клонирование или обновление репозитория
-if [ -d "$INSTALL_DIR" ]; then
-    echo "Директория $INSTALL_DIR существует. Обновляем репозиторий..."
-    cd "$INSTALL_DIR" || exit
-    git stash
-    git pull origin main
-    git stash pop || true
-else
-    echo "Клонируем репозиторий в $INSTALL_DIR..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
-    cd "$INSTALL_DIR" || exit
-fi
+# 3. Скачивание и распаковка проекта
+echo "Создаем директорию $INSTALL_DIR..."
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR" || exit
 
-# 4. Остановка и удаление старых сервисов, если они запущены
+echo "Скачиваем последнюю версию проекта..."
+curl -fsSL "${REPO_URL}/archive/refs/heads/main.zip" -o "bast-parser.zip"
+
+echo "Распаковываем архив (перезаписывая существующие файлы)..."
+unzip -o "bast-parser.zip"
+
+# Файлы извлекаются в поддиректорию 'bast-techsupport-bot-main'
+# Перемещаем все содержимое в текущую директорию
+# Используем cp -r вместо mv -f, так как mv может вызывать ошибку "Directory not empty"
+cp -r bast-techsupport-bot-main/* . 2>/dev/null || true
+cp -r bast-techsupport-bot-main/.* . 2>/dev/null || true
+
+# Очистка
+rm -f "bast-parser.zip"
+rm -rf "bast-techsupport-bot-main"
+
+# 4. Остановка и удаление старых сервисов
 echo "Останавливаем все запущенные сервисы (если они есть)..."
 docker compose down
 
@@ -97,33 +105,66 @@ docker compose down
 echo "Собираем Docker-образ для парсера..."
 docker compose build --no-cache parser
 
-# 6. Создание алиаса (исполняемого файла) для быстрого запуска
+# 6. Создание команды 'bast_parser'
 echo "Создаем команду 'bast_parser'..."
-
 cat << 'EOF' > "$EXEC_BIN"
 #!/bin/bash
 
 INSTALL_DIR="/opt/bast-parser"
+REPO_URL="https://github.com/kate-caffe1ne/bast-techsupport-bot"
 
-echo "Переходим в директорию проекта..."
+# Функция для вывода помощи
+show_help() {
+    echo "Управление BAST Parser"
+    echo "Использование: bast_parser [команда]"
+    echo ""
+    echo "Команды:"
+    echo "  start    Запустить парсер в фоновом режиме (действие по умолчанию)"
+    echo "  logs     Показать логи парсера в реальном времени"
+    echo "  stop     Остановить парсер"
+    echo "  update   Обновить парсер до последней версии"
+    echo "  help     Показать это сообщение"
+}
+
+# Переходим в директорию проекта, чтобы docker-compose нашел свой конфиг
 cd "$INSTALL_DIR" || exit
 
-echo "Запускаем BAST Parser через Docker Compose..."
-# -d для фонового режима
-# --build чтобы пересобрать образ, если код изменился
-docker compose up -d --build parser
-
-echo "Парсер запущен в фоновом режиме!"
-echo "----------------------------------------"
-echo "Логи можно смотреть командой: docker compose logs -f parser"
-echo "Остановить парсер: docker compose down"
-echo "Сгенерированные файлы сохраняются в: $INSTALL_DIR/knowledge_base"
+case "$1" in
+    start|"")
+        echo "Запускаем BAST Parser..."
+        docker compose up -d --build parser
+        echo "Парсер запущен в фоновом режиме! Логи: bast_parser logs"
+        ;;
+    logs)
+        echo "Показываем логи (нажмите Ctrl+C для выхода)..."
+        docker compose logs -f parser
+        ;;
+    stop)
+        echo "Останавливаем парсер..."
+        docker compose down
+        echo "Парсер остановлен."
+        ;;
+    update)
+        echo "Запускаем скрипт обновления..."
+        sudo bash <(curl -fsSL ${REPO_URL}/raw/main/install.sh)
+        ;;
+    help)
+        show_help
+        ;;
+    *)
+        echo "Неизвестная команда: $1"
+        show_help
+        exit 1
+        ;;
+esac
 EOF
-
 chmod +x "$EXEC_BIN"
 
 echo -e "${GREEN}Установка полностью завершена!${NC}"
 echo "--------------------------------------------------------"
-echo -e "Теперь вы можете запустить парсер, просто введя команду:"
-echo -e "${GREEN}bast_parser${NC}"
+echo -e "Теперь вы можете управлять парсером с помощью команд:"
+echo -e "  ${GREEN}bast_parser start${NC} (или просто ${GREEN}bast_parser${NC})"
+echo -e "  ${GREEN}bast_parser logs${NC}"
+echo -e "  ${GREEN}bast_parser stop${NC}"
+echo -e "  ${GREEN}bast_parser update${NC}"
 echo "--------------------------------------------------------"
