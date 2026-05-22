@@ -1,0 +1,25 @@
+# Отслеживание конфигурации окружения
+.env
+
+# Логи
+*.log
+parser.log
+
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# IDE и редакторы
+.idea/
+.vscode/
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Сгенерированные данные
+knowledge_base/
