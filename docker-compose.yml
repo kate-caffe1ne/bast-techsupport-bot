@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  parser:
+    build: .
+    container_name: bast-parser-app
+    volumes:
+      # Пробрасываем папку с базой знаний наружу
+      - ./knowledge_base:/app/knowledge_base
+    restart: unless-stopped
