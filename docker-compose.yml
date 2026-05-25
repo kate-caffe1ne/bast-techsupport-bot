@@ -3,6 +3,9 @@ services:
   parser:
     build: .
     container_name: bast-parser-app
+    # КРИТИЧЕСКИ ВАЖНО ДЛЯ CHROMIUM: увеличиваем размер разделяемой памяти.
+    # По умолчанию Docker выделяет 64MB, чего часто не хватает для браузера.
+    shm_size: '2gb'
     volumes:
       # Пробрасываем папку с базой знаний наружу
       - ./knowledge_base:/app/knowledge_base
