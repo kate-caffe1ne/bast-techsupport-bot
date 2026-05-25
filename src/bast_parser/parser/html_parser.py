@@ -26,8 +26,8 @@ async def init_browser():
                 '--disable-setuid-sandbox',
                 '--disable-blink-features=AutomationControlled',
                 '--disable-extensions',
-                # Аварийный режим: запуск в одном процессе
-                '--single-process'
+                # Явное отключение DBus
+                '--disable-dbus'
             ]
         )
 
