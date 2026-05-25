@@ -9,7 +9,7 @@
 Для установки или обновления парсера на Linux-сервере выполните одну команду:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/kate-caffe1ne/bast-techsupport-bot/main/install.sh)
+curl -fsSL https://raw.githubusercontent.com/kate-caffe1ne/bast-techsupport-bot/main/install.sh | sudo bash
 ```
 
 Этот скрипт автоматически:

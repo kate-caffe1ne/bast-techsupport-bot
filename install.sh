@@ -16,7 +16,7 @@ NC='\033[0m'
 # Требовать права суперпользователя
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}Пожалуйста, запустите установку с правами sudo:${NC}"
-  echo -e "sudo bash <(curl -fsSL ${REPO_URL}/raw/main/install.sh)"
+  echo -e "curl -fsSL ${REPO_URL}/raw/main/install.sh | sudo bash"
   exit 1
 fi
 
@@ -144,9 +144,7 @@ case "$1" in
         ;;
     update)
         echo "Запускаем скрипт обновления..."
-        # Загружаем скрипт во временный файл, а затем запускаем его
-        curl -fsSL ${REPO_URL}/raw/main/install.sh -o /tmp/install.sh
-        sudo bash /tmp/install.sh
+        curl -fsSL ${REPO_URL}/raw/main/install.sh | sudo bash
         ;;
     help)
         show_help
