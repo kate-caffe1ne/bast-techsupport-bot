@@ -82,14 +82,26 @@ mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR" || exit
 
 echo "Скачиваем последнюю версию проекта..."
-curl -fsSL "${REPO_URL}/archive/refs/heads/main.zip" -o "bast-parser.zip"
+# Добавляем --retry 3, чтобы пережить кратковременные сбои сети
+if ! curl -fsSL --retry 3 "${REPO_URL}/archive/refs/heads/main.zip" -o "bast-parser.zip"; then
+    echo -e "${RED}Ошибка: Не удалось скачать архив проекта. Проверьте интернет-соединение и доступность репозитория.${NC}"
+    exit 1
+fi
 
 echo "Распаковываем архив (перезаписывая существующие файлы)..."
-unzip -o "bast-parser.zip"
+if ! unzip -o "bast-parser.zip"; then
+    echo -e "${RED}Ошибка: Не удалось распаковать архив. Возможно, он скачался не полностью.${NC}"
+    exit 1
+fi
 
 # Надежное копирование содержимого из подпапки в корень
 echo "Перемещаем файлы проекта в $INSTALL_DIR..."
-cp -a bast-techsupport-bot-main/. .
+if [ -d "bast-techsupport-bot-main" ]; then
+    cp -a bast-techsupport-bot-main/. .
+else
+    echo -e "${RED}Ошибка: Ожидаемая директория 'bast-techsupport-bot-main' не найдена после распаковки.${NC}"
+    exit 1
+fi
 
 # Очистка
 rm -f "bast-parser.zip"
@@ -101,7 +113,10 @@ docker compose down
 
 # 5. Сборка Docker-образа
 echo "Собираем Docker-образ для парсера..."
-docker compose build --no-cache parser
+if ! docker compose build --no-cache parser; then
+    echo -e "${RED}Ошибка: Сборка Docker-образа завершилась неудачно. Проверьте лог выше.${NC}"
+    exit 1
+fi
 
 # 6. Создание команды 'bast_parser'
 echo "Создаем команду 'bast_parser'..."
