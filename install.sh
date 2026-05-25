@@ -88,7 +88,6 @@ echo "Распаковываем архив (перезаписывая суще
 unzip -o "bast-parser.zip"
 
 # Надежное копирование содержимого из подпапки в корень
-# 'cp -a source/. destination/' копирует все, включая скрытые файлы
 echo "Перемещаем файлы проекта в $INSTALL_DIR..."
 cp -a bast-techsupport-bot-main/. .
 
@@ -145,7 +144,9 @@ case "$1" in
         ;;
     update)
         echo "Запускаем скрипт обновления..."
-        sudo bash <(curl -fsSL ${REPO_URL}/raw/main/install.sh)
+        # Загружаем скрипт во временный файл, а затем запускаем его
+        curl -fsSL ${REPO_URL}/raw/main/install.sh -o /tmp/install.sh
+        sudo bash /tmp/install.sh
         ;;
     help)
         show_help
