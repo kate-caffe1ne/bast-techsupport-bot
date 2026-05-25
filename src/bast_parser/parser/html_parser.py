@@ -17,7 +17,7 @@ async def init_browser():
         _playwright = p
         _browser = await p.chromium.launch(
             headless=True,
-            # Добавляем таймаут на запуск самого браузера
+            # Добавляем таймаут на запуск самого браузера для диагностики
             timeout=60000, # 60 секунд
             args=[
                 '--disable-dev-shm-usage',
@@ -25,7 +25,9 @@ async def init_browser():
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-blink-features=AutomationControlled',
-                '--disable-extensions'
+                '--disable-extensions',
+                # Аварийный режим: запуск в одном процессе
+                '--single-process'
             ]
         )
 
