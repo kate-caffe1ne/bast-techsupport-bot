@@ -131,7 +131,7 @@ cd "$INSTALL_DIR" || exit
 case "$1" in
     start|"")
         echo "Запускаем BAST Parser..."
-        sudo docker compose up -d --build parser
+        sudo docker compose up -d parser
         echo "Парсер запущен в фоновом режиме! Логи: bast_parser logs"
         ;;
     logs)
