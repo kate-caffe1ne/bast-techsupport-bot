@@ -13,14 +13,15 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Создаем виртуальное окружение
-# (Хотя в Docker это не обязательно, это изолирует зависимости от системного Python)
 RUN python -m venv /opt/venv
 
 # Добавляем виртуальное окружение в PATH
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Устанавливаем зависимости Python
-RUN pip install --no-cache-dir --upgrade pip && \
+# Сначала активируем venv, затем устанавливаем зависимости
+RUN . /opt/venv/bin/activate && \
+    pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Устанавливаем Chromium и все необходимые системные библиотеки для Playwright
