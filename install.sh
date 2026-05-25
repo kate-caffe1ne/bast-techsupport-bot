@@ -87,11 +87,10 @@ curl -fsSL "${REPO_URL}/archive/refs/heads/main.zip" -o "bast-parser.zip"
 echo "Распаковываем архив (перезаписывая существующие файлы)..."
 unzip -o "bast-parser.zip"
 
-# Файлы извлекаются в поддиректорию 'bast-techsupport-bot-main'
-# Перемещаем все содержимое в текущую директорию
-# Используем cp -r вместо mv -f, так как mv может вызывать ошибку "Directory not empty"
-cp -r bast-techsupport-bot-main/* . 2>/dev/null || true
-cp -r bast-techsupport-bot-main/.* . 2>/dev/null || true
+# Надежное копирование содержимого из подпапки в корень
+# 'cp -a source/. destination/' копирует все, включая скрытые файлы
+echo "Перемещаем файлы проекта в $INSTALL_DIR..."
+cp -a bast-techsupport-bot-main/. .
 
 # Очистка
 rm -f "bast-parser.zip"
