@@ -127,19 +127,20 @@ show_help() {
 # Переходим в директорию проекта, чтобы docker-compose нашел свой конфиг
 cd "$INSTALL_DIR" || exit
 
+# Запускаем все команды docker compose с правами sudo
 case "$1" in
     start|"")
         echo "Запускаем BAST Parser..."
-        docker compose up -d --build parser
+        sudo docker compose up -d --build parser
         echo "Парсер запущен в фоновом режиме! Логи: bast_parser logs"
         ;;
     logs)
         echo "Показываем логи (нажмите Ctrl+C для выхода)..."
-        docker compose logs -f parser
+        sudo docker compose logs -f parser
         ;;
     stop)
         echo "Останавливаем парсер..."
-        docker compose down
+        sudo docker compose down
         echo "Парсер остановлен."
         ;;
     update)

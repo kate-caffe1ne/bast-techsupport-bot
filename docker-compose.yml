@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # Наш текущий парсер
   parser:
     build: .
     container_name: bast-parser-app
@@ -8,3 +7,32 @@ services:
       # Пробрасываем папку с базой знаний наружу
       - ./knowledge_base:/app/knowledge_base
     restart: unless-stopped
+
+  # --- ЗАДЕЛ НА БУДУЩЕЕ ---
+  
+  # bot:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile.bot
+  #   container_name: bast-tg-bot
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./knowledge_base:/app/knowledge_base # Бот тоже должен видеть эту папку
+  #   restart: unless-stopped
+
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: bast-db
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: bast_db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
